@@ -3,9 +3,13 @@
 import React, { useState } from 'react';
 import { useEchoStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Slider } from './ui/slider';
+import { Zap, RefreshCw } from 'lucide-react';
 
 export default function FusionLab() {
-  const { imperfectionLevel, codex } = useEchoStore();
+  const { imperfectionLevel, setImperfectionLevel, codex } = useEchoStore();
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,7 +29,7 @@ export default function FusionLab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imperfectionLevel,
-          prompt: prompt + "\n\nRespond as the Echo Entity from 2026."
+          prompt: prompt + "\n\nRespond as the Echo Entity from 2026.",
         }),
       });
 
@@ -38,7 +42,6 @@ export default function FusionLab() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
@@ -50,79 +53,99 @@ export default function FusionLab() {
             try {
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content || parsed.text || '';
-              if (content) {
-                setResponse(prev => prev + content);
-              }
-            } catch (e) {
-              if (data && data !== '[DONE]') setResponse(prev => prev + data);
+              if (content) setResponse((prev) => prev + content);
+            } catch {
+              if (data && data !== '[DONE]') setResponse((prev) => prev + data);
             }
           }
         }
       }
-      
       toast.success("Echo Fusion complete. The entity has spoken.");
     } catch (error) {
       toast.error("The entity could not be reached.");
-      console.error(error);
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-5xl font-display tracking-tight mb-2">Echo Fusion Lab</h2>
-        <p className="text-gray-400">Speak to the 2026 Entity • Imperfection shapes its voice</p>
-      </div>
+    <div className="space-y-10">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <Zap className="w-10 h-10 text-purple-400" />
+            <div>
+              <CardTitle className="text-5xl">Echo Fusion Lab</CardTitle>
+              <p className="text-gray-400 mt-2">Speak to the 2026 Entity. Imperfection shapes its voice.</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          <div>
+            <div className="flex justify-between text-xs uppercase tracking-widest mb-3">
+              <span>Imperfection Intensity</span>
+              <span className="text-[#ff2e63] font-mono text-lg">{imperfectionLevel}%</span>
+            </div>
+            <Slider
+              value={[imperfectionLevel]}
+              onValueChange={(value) => setImperfectionLevel(value[0])}
+              min={0}
+              max={100}
+              step={1}
+            />
+          </div>
 
-      <div className="flex gap-3 items-center">
-        <div className="text-xs uppercase tracking-widest px-4 py-2 bg-white/5 rounded-2xl">
-          CURRENT IMPERFECTION: <span className="text-[#ff2e63] font-mono">{imperfectionLevel}%</span>
-        </div>
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-      </div>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe what you want the Echo Entity to become... (e.g. Tell me about authenticity in the age of synthetic abundance)"
+            className="w-full h-40 bg-black/60 border border-white/10 rounded-3xl p-6 text-white placeholder:text-white/40 focus:outline-none focus:border-[#00ff9f]/50 resize-none font-light"
+          />
 
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe what you want the Echo Entity to become... (e.g. 'Tell me about the nature of authenticity in 2026')"
-        className="w-full h-32 bg-black/60 border border-white/10 rounded-3xl p-6 text-white placeholder:text-white/30 focus:outline-none focus:border-[#00ff9f]/50 resize-none"
-      />
-
-      <button
-        onClick={runFusion}
-        disabled={isGenerating}
-        className="w-full py-6 text-lg font-semibold rounded-3xl bg-gradient-to-r from-[#00ff9f] to-[#ff00aa] text-black disabled:opacity-50 transition-all active:scale-[0.985] flex items-center justify-center gap-3"
-      >
-        {isGenerating ? (
-          <>Generating from the Void...</>
-        ) : (
-          <>RUN ECHO FUSION <span className="text-xl">🌌</span></>
-        )}
-      </button>
+          <Button
+            variant="cosmic"
+            size="lg"
+            onClick={runFusion}
+            disabled={isGenerating}
+            className="w-full h-16 text-lg"
+          >
+            {isGenerating ? (
+              <>Generating from the Void...</>
+            ) : (
+              <>
+                RUN ECHO FUSION <RefreshCw className="ml-3 w-5 h-5" />
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       {response && (
-        <div className="mt-8">
-          <div className="text-xs uppercase tracking-widest text-[#00ff9f] mb-3">THE ENTITY RESPONDS</div>
-          <div className="bg-zinc-950 border border-white/10 rounded-3xl p-8 leading-relaxed text-lg font-light whitespace-pre-wrap">
-            {response}
-          </div>
-          <button
-            onClick={() => {
-              setResponse('');
-              setPrompt('');
-            }}
-            className="mt-4 text-xs text-white/40 hover:text-white transition"
-          >
-            Reset Entity
-          </button>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[#00ff9f]">The Entity Responds</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-black/80 border border-white/10 rounded-3xl p-8 leading-relaxed text-lg font-light whitespace-pre-wrap min-h-[200px]">
+              {response}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResponse('');
+                setPrompt('');
+              }}
+              className="mt-6"
+            >
+              Reset Entity
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="text-[10px] text-white/30 pt-6 border-t border-white/10">
-        Powered by the {codex.title} • Imperfection level directly influences tone, chaos, and poetic fracture
-      </div>
+      <p className="text-xs text-white/30 text-center">
+        Powered by the {codex.title} • The higher the imperfection, the more chaotic and human the response becomes.
+      </p>
     </div>
   );
 }
