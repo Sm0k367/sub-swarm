@@ -11,7 +11,7 @@
     "studio": "next dev --turbo"
   },
   "dependencies": {
-    "next": "15.2.4",
+    "next": "^15.5.15",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "@react-three/fiber": "^9.1.0",
@@ -37,7 +37,7 @@
     "@types/three": "^0.173.0",
     "typescript": "^5.8.0",
     "eslint": "^9.23.0",
-    "eslint-config-next": "15.2.4",
+    "eslint-config-next": "15.5.15",
     "postcss": "^8.5.3",
     "autoprefixer": "^10.4.21",
     "@tailwindcss/typography": "^0.5.16"
